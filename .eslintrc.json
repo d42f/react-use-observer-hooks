@@ -1,0 +1,23 @@
+{
+  "root": true,
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": { "project": ["./tsconfig.json"] },
+  "plugins": ["@typescript-eslint", "prettier", "react-hooks"],
+  "rules": {
+    "curly": "error",
+    "import/no-cycle": "error",
+    "import/no-self-import": "error",
+    "react-hooks/exhaustive-deps": "error",
+    "@typescript-eslint/no-unused-vars": ["warn", { "ignoreRestSiblings": true }],
+    "prettier/prettier": ["error", { "endOfLine": "auto" }]
+  },
+  "settings": {
+    "@typescript-eslint/parser": [".ts", ".tsx"]
+  }
+}
