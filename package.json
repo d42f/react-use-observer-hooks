@@ -2,9 +2,14 @@
   "name": "react-use-observer-hooks",
   "version": "1.1.0",
   "description": "Collection of React hooks",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "clean": "tsc --build --clean",
+    "prebuild": "npm run clean",
+    "build": "tsc --build",
+    "preversion": "npm run build",
+    "postversion": "git push --follow-tags",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
