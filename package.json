@@ -1,6 +1,6 @@
 {
   "name": "react-use-observer-hooks",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Collection of React hooks",
   "main": "dist/index.js",
   "source": "src/index.ts",
