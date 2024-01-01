@@ -13,8 +13,8 @@ export const useWasScrolled = (originalElement?: HTMLElement | Window | null | u
         ? 'scrollY' in element
           ? element.scrollY
           : 'scrollTop' in element
-          ? element.scrollTop
-          : null
+            ? element.scrollTop
+            : null
         : null;
       setIsScrolled(typeof scroll === 'number' ? scroll > offset : false);
     };
