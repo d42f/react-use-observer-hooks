@@ -1,4 +1,7 @@
 # react-use-observer-hooks
-React hook to observe for the current next.js router state
+
+The collection of React hooks to observe for the current next.js router state, visibility blocks and so on.
+
 ## License
+
 MIT
