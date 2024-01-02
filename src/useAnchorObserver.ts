@@ -1,11 +1,11 @@
-import { RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
+import { RefObject, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import scrollIntoView from 'smooth-scroll-into-view-if-needed';
 
 import { useVisibleChildren } from './useIntersectionObserver';
 
 interface UseAnchorObserver<T> {
   ref: RefObject<T>;
   focusedAnchor: string | undefined;
-  isScrolling: boolean;
   scrollToAnchor: (anchor: string) => void;
 }
 
@@ -21,14 +21,15 @@ export const useAnchorObserver = <T extends HTMLElement>({
   onAnchorChange,
 }: UseAnchorObserverProps): UseAnchorObserver<T> => {
   const ref = useRef<T>(null);
-  const stateRef = useRef({ isInit: false, isScrolling: false });
+  const stateRef = useRef({ isInit: false, isLocked: false });
   const changeListenerRef = useRef(onAnchorChange);
   const focusedAnchorRef = useRef<string | undefined>();
+  const [, forceRender] = useReducer(v => v + 1, 0);
 
   const focusedChild = useVisibleChildren(ref.current);
 
   const focusedAnchor = useMemo(() => {
-    if (!stateRef.current.isScrolling) {
+    if (!stateRef.current.isLocked) {
       const childIndex = ref.current && focusedChild ? Array.from(ref.current.children).indexOf(focusedChild) : -1;
       focusedAnchorRef.current = childIndex >= 0 ? anchors[childIndex] : undefined;
     }
@@ -42,10 +43,12 @@ export const useAnchorObserver = <T extends HTMLElement>({
         if (anchorIndex >= 0) {
           const child = ref.current.children.item(anchorIndex);
           if (child) {
-            stateRef.current.isScrolling = true;
-            child.scrollIntoView({ behavior: 'smooth' });
-            // TODO: make it better
-            setTimeout(() => (stateRef.current.isScrolling = false), 200);
+            focusedAnchorRef.current = anchor;
+            stateRef.current.isLocked = true;
+            scrollIntoView(child, { behavior: 'smooth', block: 'start', scrollMode: 'if-needed' }).finally(() => {
+              stateRef.current.isLocked = false;
+              forceRender();
+            });
           }
         }
       }
@@ -58,13 +61,13 @@ export const useAnchorObserver = <T extends HTMLElement>({
   }, [onAnchorChange]);
 
   useEffect(() => {
-    if (focusedAnchor) {
+    if (focusedAnchor && !stateRef.current.isLocked) {
       changeListenerRef.current?.(focusedAnchor);
     }
   }, [focusedAnchor]);
 
   useEffect(() => {
-    if (currentAnchor && currentAnchor !== focusedAnchorRef.current && !stateRef.current.isScrolling) {
+    if (currentAnchor && currentAnchor !== focusedAnchorRef.current && !stateRef.current.isLocked) {
       scrollToAnchor(currentAnchor);
     }
   }, [currentAnchor, scrollToAnchor]);
@@ -75,11 +78,12 @@ export const useAnchorObserver = <T extends HTMLElement>({
       const child = anchorIndex >= 0 ? ref.current.children.item(anchorIndex) : null;
       if (child) {
         stateRef.current.isInit = true;
+        focusedAnchorRef.current = currentAnchor;
         // TODO: check if it already close with target
         child.scrollIntoView({ behavior: 'instant' });
       }
     }
   }, [currentAnchor, anchors]);
 
-  return { ref, focusedAnchor, isScrolling: stateRef.current.isScrolling, scrollToAnchor };
+  return { ref, focusedAnchor: focusedAnchorRef.current, scrollToAnchor };
 };
