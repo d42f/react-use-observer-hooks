@@ -1,7 +1,11 @@
 # react-use-observer-hooks
 
-The collection of React hooks to observe for the current next.js router state, visibility blocks and so on.
+The collection of React hooks to observe for the current router state, visibility blocks and so on.
 
-## License
+## useAnchorObserver
+
+This hook helps to sync navigation with the current position of the page's scroll.
+
+### License
 
 MIT
