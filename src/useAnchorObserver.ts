@@ -1,7 +1,8 @@
-import { RefObject, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import scrollIntoView from 'smooth-scroll-into-view-if-needed';
+import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import scrollIntoView from 'scroll-into-view-if-needed';
 
 import { useVisibleChildren } from './useIntersectionObserver';
+import { smoothScrollBehavior } from './smoothScroll';
 
 interface UseAnchorObserver<T> {
   ref: RefObject<T>;
@@ -22,9 +23,9 @@ export const useAnchorObserver = <T extends HTMLElement>({
 }: UseAnchorObserverProps): UseAnchorObserver<T> => {
   const ref = useRef<T>(null);
   const stateRef = useRef({ isInit: false, isLocked: false });
+  const [, setRerender] = useState(0);
   const changeListenerRef = useRef(onAnchorChange);
   const focusedAnchorRef = useRef<string | undefined>();
-  const [, forceRender] = useReducer(v => v + 1, 0);
 
   const focusedChild = useVisibleChildren(ref.current);
 
@@ -45,9 +46,13 @@ export const useAnchorObserver = <T extends HTMLElement>({
           if (child) {
             focusedAnchorRef.current = anchor;
             stateRef.current.isLocked = true;
-            scrollIntoView(child, { behavior: 'smooth', block: 'start', scrollMode: 'if-needed' }).finally(() => {
+            scrollIntoView<Promise<unknown>>(child, {
+              behavior: smoothScrollBehavior(),
+              block: 'start',
+              scrollMode: 'if-needed',
+            }).finally(() => {
               stateRef.current.isLocked = false;
-              forceRender();
+              setRerender(value => value + 1);
             });
           }
         }
@@ -79,8 +84,7 @@ export const useAnchorObserver = <T extends HTMLElement>({
       if (child) {
         stateRef.current.isInit = true;
         focusedAnchorRef.current = currentAnchor;
-        // TODO: check if it already close with target
-        child.scrollIntoView({ behavior: 'instant' });
+        scrollIntoView(child, { behavior: 'instant', block: 'start', scrollMode: 'if-needed' });
       }
     }
   }, [currentAnchor, anchors]);
