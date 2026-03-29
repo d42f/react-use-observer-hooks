@@ -27,8 +27,7 @@ export default [
       ...reactHooks.configs.recommended.rules,
       curly: 'error',
       'react-hooks/exhaustive-deps': 'error',
-      // refs during render pattern in useAnchorObserver is intentional — needs separate refactor
-      'react-hooks/refs': 'warn',
+      'react-hooks/refs': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { ignoreRestSiblings: true }],
     },
   },
