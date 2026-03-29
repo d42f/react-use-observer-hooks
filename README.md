@@ -18,6 +18,8 @@ npm install react-use-observer-hooks
 
 ## useAnchorObserver
 
+**[Live Demo on StackBlitz](https://stackblitz.com/edit/vitejs-vite-rd7g5dua)**
+
 Synchronizes URL/router state with the current scroll position on a single page divided into named sections. When the user scrolls to a section, the URL updates automatically. When the URL changes (e.g., via navigation links or browser back/forward), the page scrolls to the corresponding section.
 
 ### Signature
