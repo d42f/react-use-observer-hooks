@@ -6,6 +6,7 @@
 
     /* Modules */
     "module": "commonjs" /* Specify what module code is generated. */,
+    "moduleResolution": "node" /* CJS build: override bundler resolution from base config. */,
 
     /* Emit */
     "outDir": "./dist/cjs" /* Specify an output folder for all emitted files. */

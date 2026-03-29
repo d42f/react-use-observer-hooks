@@ -1,3 +1,3 @@
 export { useAnchorObserver } from './useAnchorObserver';
-export { useVisible, useVisibleChildren } from './useIntersectionObserver';
+export { useVisible } from './useIntersectionObserver';
 export { useWasScrolled } from './useWasScrolled';
