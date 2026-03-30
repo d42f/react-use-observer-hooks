@@ -1,21 +1,20 @@
-import { useState } from 'react';
+import { NavLink, Route, Routes, Navigate } from 'react-router-dom';
 import { WasScrolledDemo } from './demos/WasScrolledDemo';
 import { VisibleDemo } from './demos/VisibleDemo';
 import { AnchorObserverDemo } from './demos/AnchorObserverDemo';
 
 const TABS = [
-  { id: 'anchorObserver', label: 'useAnchorObserver', component: AnchorObserverDemo },
-  { id: 'wasScrolled', label: 'useWasScrolled', component: WasScrolledDemo },
-  { id: 'visible', label: 'useVisible', component: VisibleDemo },
+  {
+    path: 'anchor-observer',
+    routePath: 'anchor-observer/*',
+    label: 'useAnchorObserver',
+    component: AnchorObserverDemo,
+  },
+  { path: 'was-scrolled', routePath: 'was-scrolled', label: 'useWasScrolled', component: WasScrolledDemo },
+  { path: 'visible', routePath: 'visible', label: 'useVisible', component: VisibleDemo },
 ] as const;
 
-type TabId = (typeof TABS)[number]['id'];
-
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabId>('anchorObserver');
-
-  const ActiveDemo = TABS.find(t => t.id === activeTab)!.component;
-
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <nav
@@ -25,46 +24,51 @@ export default function App() {
           zIndex: 100,
           background: '#fff',
           borderBottom: '1px solid #e5e5e5',
-          display: 'flex',
-          gap: 4,
-          padding: '0 24px',
         }}
       >
-        <span
-          style={{
-            fontWeight: 700,
-            fontSize: 14,
-            color: '#6b7280',
-            display: 'flex',
-            alignItems: 'center',
-            marginRight: 12,
-          }}
-        >
-          demo
-        </span>
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+        <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', gap: 4, padding: '0 24px' }}>
+          <span
             style={{
-              padding: '12px 16px',
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
+              fontWeight: 700,
               fontSize: 14,
-              fontWeight: activeTab === tab.id ? 600 : 400,
-              color: activeTab === tab.id ? '#111' : '#6b7280',
-              borderBottom: activeTab === tab.id ? '2px solid #111' : '2px solid transparent',
-              transition: 'color 0.15s',
+              color: '#6b7280',
+              display: 'flex',
+              alignItems: 'center',
+              marginRight: 12,
             }}
           >
-            {tab.label}
-          </button>
-        ))}
+            demo
+          </span>
+          {TABS.map(tab => (
+            <NavLink
+              key={tab.path}
+              to={tab.path}
+              style={({ isActive }) => ({
+                padding: '12px 16px',
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: isActive ? 600 : 400,
+                color: isActive ? '#111' : '#6b7280',
+                borderBottom: isActive ? '2px solid #111' : '2px solid transparent',
+                transition: 'color 0.15s',
+                textDecoration: 'none',
+              })}
+            >
+              {tab.label}
+            </NavLink>
+          ))}
+        </div>
       </nav>
 
       <main style={{ flex: 1 }}>
-        <ActiveDemo />
+        <Routes>
+          <Route index element={<Navigate to={TABS[0].path} replace />} />
+          {TABS.map(tab => (
+            <Route key={tab.path} path={tab.routePath} element={<tab.component />} />
+          ))}
+        </Routes>
       </main>
     </div>
   );

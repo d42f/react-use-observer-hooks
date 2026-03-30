@@ -1,37 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAnchorObserver } from 'react-use-observer-hooks';
 
 const SECTIONS = [
   {
-    id: 'about',
+    id: '/anchor-observer',
     label: 'About',
     color: '#6366f1',
     content:
       'This hook syncs the active section with the scroll position. It uses IntersectionObserver under the hood to detect which section is most visible and updates the URL anchor accordingly.',
   },
   {
-    id: 'features',
+    id: '/anchor-observer/features',
     label: 'Features',
     color: '#8b5cf6',
     content:
       'Smooth scrolling to any section on click, automatic anchor detection on scroll, URL synchronization, SSR-safe implementation, and zero external dependencies beyond React.',
   },
   {
-    id: 'usage',
+    id: '/anchor-observer/usage',
     label: 'Usage',
     color: '#ec4899',
     content:
       'Pass a list of anchor IDs and the current anchor from your router. The hook returns a ref for the container, the currently focused anchor, and a scrollToAnchor function.',
   },
   {
-    id: 'examples',
+    id: '/anchor-observer/examples',
     label: 'Examples',
     color: '#f97316',
     content:
       'Works great with Next.js App Router and Pages Router. Use the usePathname and useRouter hooks to read and update the URL hash as the user scrolls through sections.',
   },
   {
-    id: 'faq',
+    id: '/anchor-observer/faq',
     label: 'FAQ',
     color: '#14b8a6',
     content:
@@ -42,28 +42,17 @@ const SECTIONS = [
 const ANCHOR_IDS = SECTIONS.map(s => s.id);
 
 export function AnchorObserverDemo() {
-  const [currentAnchor, setCurrentAnchor] = useState(ANCHOR_IDS[0]);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const currentAnchor = ANCHOR_IDS.includes(pathname) ? pathname : ANCHOR_IDS[0];
 
-  const { ref, focusedAnchor, scrollToAnchor } = useAnchorObserver<HTMLDivElement>({
+  const { ref, focusedAnchor } = useAnchorObserver<HTMLDivElement>({
     anchors: ANCHOR_IDS,
     currentAnchor,
     onAnchorChange: newAnchor => {
-      setCurrentAnchor(newAnchor);
-      history.pushState({}, '', newAnchor);
+      navigate(newAnchor);
     },
   });
-
-  useEffect(() => {
-    const handlePopState = () => {
-      const anchor = location.pathname.slice(1);
-      if (anchor && ANCHOR_IDS.includes(anchor)) {
-        setCurrentAnchor(anchor);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
 
   return (
     <div style={{ padding: 32, maxWidth: 800, margin: '0 auto' }}>
@@ -90,7 +79,7 @@ export function AnchorObserverDemo() {
             return (
               <button
                 key={section.id}
-                onClick={() => scrollToAnchor(section.id)}
+                onClick={() => navigate(section.id)}
                 style={{
                   padding: '10px 14px',
                   textAlign: 'left',
