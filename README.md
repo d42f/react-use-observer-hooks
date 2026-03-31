@@ -1,5 +1,7 @@
 # react-use-observer-hooks
 
+[![npm version](https://img.shields.io/npm/v/react-use-observer-hooks)](https://www.npmjs.com/package/react-use-observer-hooks)
+
 A collection of React hooks for syncing scroll position with navigation state, detecting element visibility, and tracking scroll offset.
 
 ## Installation
@@ -18,7 +20,7 @@ npm install react-use-observer-hooks
 
 ## useAnchorObserver
 
-![hook-demo](https://github.com/user-attachments/assets/28c12655-a894-44ef-9292-c687a37dc9d8)
+![useAnchorObserver-demo](https://github.com/user-attachments/assets/28c12655-a894-44ef-9292-c687a37dc9d8)
 
 **[Live Demo on StackBlitz](https://stackblitz.com/edit/vitejs-vite-rd7g5dua)**
 
@@ -32,19 +34,21 @@ useAnchorObserver<T extends HTMLElement>(props: UseAnchorObserverProps): UseAnch
 
 ### Props
 
-| Prop | Type | Required | Description |
-|---|---|---|---|
-| `anchors` | `string[]` | yes | Ordered list of anchor identifiers — one per section, matched by index to the container's children |
-| `currentAnchor` | `string` | yes | The currently active anchor (e.g., current URL pathname) |
-| `onAnchorChange` | `(anchor: string) => void` | no | Called when the visible section changes due to scrolling |
+| Prop             | Type                       | Required | Default | Description                                                                                                                                                                |
+| ---------------- | -------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `anchors`        | `string[]`                 | yes      | —       | Ordered list of anchor identifiers — one per section, matched by index to the container's children                                                                         |
+| `currentAnchor`  | `string`                   | yes      | —       | The currently active anchor (e.g., current URL pathname)                                                                                                                   |
+| `offsetPx`       | `number`                   | no       | `0`     | Offset in pixels subtracted from the scroll target position and applied as `rootMargin` top in `IntersectionObserver`. Use this when a sticky header overlaps the content. |
+| `throttleMs`     | `number`                   | no       | `50`    | Throttle interval in milliseconds for `IntersectionObserver` callbacks                                                                                                     |
+| `onAnchorChange` | `(anchor: string) => void` | no       | —       | Called when the visible section changes due to scrolling                                                                                                                   |
 
 ### Return value
 
-| Field | Type | Description |
-|---|---|---|
-| `ref` | `RefObject<T>` | Attach to the container element whose **direct children** are the sections |
-| `focusedAnchor` | `string \| undefined` | The anchor identifier of the currently visible section |
-| `scrollToAnchor` | `(anchor: string) => void` | Programmatically scroll to a section by its anchor identifier |
+| Field            | Type                       | Description                                                                |
+| ---------------- | -------------------------- | -------------------------------------------------------------------------- |
+| `ref`            | `RefCallback<T>`           | Attach to the container element whose **direct children** are the sections |
+| `focusedAnchor`  | `string \| undefined`      | The anchor identifier of the currently visible section                     |
+| `scrollToAnchor` | `(anchor: string) => void` | Programmatically scroll to a section by its anchor identifier              |
 
 ### How it works
 
@@ -68,9 +72,9 @@ import Router from 'next/router';
 
 // Sections and their corresponding URL paths
 const SECTIONS = [
-  { href: '/',          label: 'About',    Component: About },
-  { href: '/timeline',  label: 'Timeline', Component: Timeline },
-  { href: '/contacts',  label: 'Contacts', Component: Contacts },
+  { href: '/', label: 'About', Component: About },
+  { href: '/timeline', label: 'Timeline', Component: Timeline },
+  { href: '/contacts', label: 'Contacts', Component: Contacts },
 ];
 
 const ANCHORS = SECTIONS.map(s => s.href); // ['/', '/timeline', '/contacts']
@@ -80,16 +84,14 @@ export default function Page() {
 
   const { ref, focusedAnchor } = useAnchorObserver<HTMLDivElement>({
     anchors: ANCHORS,
-    currentAnchor: pathName,       // current URL path drives the initial scroll position
+    currentAnchor: pathName, // current URL path drives the initial scroll position
+    offsetPx: 64, // height of a sticky header, so sections aren't hidden behind it
     onAnchorChange: (anchor: string) => {
       Router.push(anchor, undefined, { scroll: false, shallow: false });
     },
   });
 
-  const currentSection = useMemo(
-    () => SECTIONS.find(s => s.href === focusedAnchor),
-    [focusedAnchor],
-  );
+  const currentSection = useMemo(() => SECTIONS.find(s => s.href === focusedAnchor), [focusedAnchor]);
 
   return (
     <>
@@ -147,10 +149,10 @@ useWasScrolled(element?: HTMLElement | Window | null, offset?: number): boolean
 
 ### Parameters
 
-| Param | Type | Default | Description |
-|---|---|---|---|
-| `element` | `HTMLElement \| Window \| null` | `window` | Element to observe. Defaults to the browser window. |
-| `offset` | `number` | `0` | Scroll distance in pixels after which the hook returns `true` |
+| Param     | Type                            | Default  | Description                                                   |
+| --------- | ------------------------------- | -------- | ------------------------------------------------------------- |
+| `element` | `HTMLElement \| Window \| null` | `window` | Element to observe. Defaults to the browser window.           |
+| `offset`  | `number`                        | `0`      | Scroll distance in pixels after which the hook returns `true` |
 
 ### Example: sticky header shadow
 
@@ -160,11 +162,7 @@ import { useWasScrolled } from 'react-use-observer-hooks';
 export const Header = () => {
   const isScrolled = useWasScrolled(); // true once page scrolls past 0px
 
-  return (
-    <header className={isScrolled ? 'header header--sticked' : 'header'}>
-      ...
-    </header>
-  );
+  return <header className={isScrolled ? 'header header--sticked' : 'header'}>...</header>;
 };
 ```
 
@@ -190,12 +188,12 @@ useVisible(element: Element | null, options?: IntersectionObserverInit & { freez
 
 Accepts all standard `IntersectionObserver` options plus:
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `threshold` | `number` | `0` | Fraction of the element that must be visible |
-| `root` | `Element \| null` | `null` | Scroll container (defaults to viewport) |
-| `rootMargin` | `string` | `'0%'` | Margin around the root |
-| `freezeOnceVisible` | `boolean` | `false` | Stop observing once the element becomes visible |
+| Option              | Type              | Default | Description                                     |
+| ------------------- | ----------------- | ------- | ----------------------------------------------- |
+| `threshold`         | `number`          | `0`     | Fraction of the element that must be visible    |
+| `root`              | `Element \| null` | `null`  | Scroll container (defaults to viewport)         |
+| `rootMargin`        | `string`          | `'0%'`  | Margin around the root                          |
+| `freezeOnceVisible` | `boolean`         | `false` | Stop observing once the element becomes visible |
 
 ### Example: lazy-render a heavy component
 
@@ -207,11 +205,7 @@ const LazySection = () => {
   const ref = useRef<HTMLDivElement>(null);
   const isVisible = useVisible(ref.current, { freezeOnceVisible: true });
 
-  return (
-    <div ref={ref}>
-      {isVisible ? <HeavyComponent /> : <Placeholder />}
-    </div>
-  );
+  return <div ref={ref}>{isVisible ? <HeavyComponent /> : <Placeholder />}</div>;
 };
 ```
 
