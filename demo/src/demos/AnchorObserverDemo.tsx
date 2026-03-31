@@ -53,7 +53,7 @@ export function AnchorObserverDemo() {
   });
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 32px 64px' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px' }}>
       <h2 style={{ fontSize: 22, marginBottom: 8 }}>useAnchorObserver</h2>
       <p style={{ color: '#6b7280', marginBottom: 24, fontSize: 14 }}>
         Syncs scroll position with navigation. Click a nav item or scroll the page — the active section updates
