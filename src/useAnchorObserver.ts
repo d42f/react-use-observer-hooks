@@ -24,7 +24,7 @@ interface UseAnchorObserverProps {
 
 export const useAnchorObserver = <T extends HTMLElement>({
   anchors,
-  currentAnchor,
+  currentAnchor: currentAnchorProp,
   offsetPx = 0,
   throttleMs = 50,
   onAnchorChange,
@@ -38,29 +38,13 @@ export const useAnchorObserver = <T extends HTMLElement>({
   const focusedAnchorRef = useRef<string | undefined>(undefined);
   const [focusedChild, setFocusedChild] = useState<Element | null>(null);
 
-  currentAnchor = anchors.includes(currentAnchor) ? currentAnchor : anchors[0];
-  const currentAnchorIndex = anchors.indexOf(currentAnchor);
+  const currentAnchor = anchors.includes(currentAnchorProp) ? currentAnchorProp : undefined;
+  const currentAnchorIndex = currentAnchor !== undefined ? anchors.indexOf(currentAnchor) : -1;
 
   const actualAnchor = useMemo(() => {
     const childIndex = container && focusedChild ? Array.from(container.children).indexOf(focusedChild) : -1;
     return childIndex >= 0 ? anchors[childIndex] : undefined;
   }, [anchors, focusedChild, container]);
-
-  useEffect(() => {
-    if (!container || !window.IntersectionObserver) return;
-    const updateEntry = throttle(([{ target }]: IntersectionObserverEntry[]) => {
-      setFocusedChild(prev => (!prev || getIntersectionRatio(prev) < getIntersectionRatio(target) ? target : prev));
-    }, throttleMs);
-    const observers = Array.from(container.children).map(child => {
-      const observer = new IntersectionObserver(updateEntry, {
-        threshold: THRESHOLD,
-        rootMargin: `-${offsetPx}px 0px 0px 0px`,
-      });
-      observer.observe(child);
-      return observer;
-    });
-    return () => observers.forEach(o => o.disconnect());
-  }, [container, throttleMs, offsetPx]);
 
   const focusedAnchor = useMemo(() => {
     if (!stateRef.current.isLocked) {
@@ -78,7 +62,6 @@ export const useAnchorObserver = <T extends HTMLElement>({
           if (child) {
             focusedAnchorRef.current = anchor;
             forceUpdate(n => n + 1);
-
             stateRef.current.isLocked = true;
             await scrollIntoView(child, {
               behavior: actions =>
@@ -95,40 +78,68 @@ export const useAnchorObserver = <T extends HTMLElement>({
   );
 
   useEffect(() => {
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  useEffect(() => {
     stableParamsRef.current = { anchors, onAnchorChange };
   }, [anchors, onAnchorChange]);
 
   useEffect(() => {
-    if (focusedAnchor && !stateRef.current.isLocked) {
+    if (!container || !window.IntersectionObserver) return;
+    const updateEntry = throttle(([{ target }]: IntersectionObserverEntry[]) => {
+      setFocusedChild(prev => (!prev || getIntersectionRatio(prev) < getIntersectionRatio(target) ? target : prev));
+    }, throttleMs);
+    const observers = Array.from(container.children).map(child => {
+      const observer = new IntersectionObserver(updateEntry, {
+        threshold: THRESHOLD,
+        rootMargin: `-${offsetPx}px 0px 0px 0px`,
+      });
+      observer.observe(child);
+      return observer;
+    });
+    return () => observers.forEach(o => o.disconnect());
+  }, [container, throttleMs, offsetPx]);
+
+  useEffect(() => {
+    if (focusedAnchor && stateRef.current.isInit && !stateRef.current.isLocked) {
       stableParamsRef.current?.onAnchorChange?.(focusedAnchor);
     }
   }, [focusedAnchor]);
 
   useEffect(() => {
-    if (currentAnchor && currentAnchor !== focusedAnchorRef.current) {
+    if (currentAnchor && stateRef.current.isInit && currentAnchor !== focusedAnchorRef.current) {
       scrollToAnchor(currentAnchor);
     }
   }, [currentAnchor, scrollToAnchor]);
 
   useEffect(() => {
-    if (!stateRef.current.isInit && container) {
-      const child = currentAnchorIndex >= 0 ? container.children.item(currentAnchorIndex) : null;
-      if (child) {
-        stateRef.current.isInit = true;
-        focusedAnchorRef.current = currentAnchor;
-        scrollIntoView(child, {
-          behavior: actions => {
-            actions.forEach(({ el, left, top }) => {
-              el.scrollLeft = left;
-              el.scrollTop = Math.max(0, top - offsetPx);
-            });
-            return Promise.resolve([]);
-          },
-          block: 'start',
-          scrollMode: 'if-needed',
-        });
+    (async () => {
+      if (!stateRef.current.isInit && container && currentAnchor) {
+        const child = currentAnchorIndex >= 0 ? container.children.item(currentAnchorIndex) : null;
+        if (child) {
+          stateRef.current.isLocked = true;
+          await scrollIntoView(child, {
+            behavior: actions => {
+              actions.forEach(({ el, left, top }) => {
+                el.scrollLeft = left;
+                el.scrollTop = Math.max(0, top - offsetPx);
+              });
+              return Promise.resolve([]);
+            },
+            block: 'start',
+            scrollMode: 'if-needed',
+          });
+          stateRef.current.isLocked = false;
+
+          focusedAnchorRef.current = currentAnchor;
+          stableParamsRef.current?.onAnchorChange?.(currentAnchor);
+          stateRef.current.isInit = true;
+        }
       }
-    }
+    })();
   }, [currentAnchor, currentAnchorIndex, container, offsetPx]);
 
   return { ref, focusedAnchor: focusedAnchorRef.current, scrollToAnchor };
