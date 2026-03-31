@@ -39,16 +39,13 @@ const SECTIONS = [
   },
 ];
 
-const ANCHOR_IDS = SECTIONS.map(s => s.id);
-
 export function AnchorObserverDemo() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const currentAnchor = ANCHOR_IDS.includes(pathname) ? pathname : ANCHOR_IDS[0];
 
   const { ref, focusedAnchor } = useAnchorObserver<HTMLDivElement>({
-    anchors: ANCHOR_IDS,
-    currentAnchor,
+    anchors: SECTIONS.map(s => s.id),
+    currentAnchor: pathname,
     onAnchorChange: newAnchor => {
       navigate(newAnchor);
     },
@@ -141,7 +138,7 @@ export function AnchorObserverDemo() {
         }}
       >
         Current anchor: <strong style={{ color: '#111' }}>{focusedAnchor ?? '—'}</strong>
-        &nbsp;&nbsp;|&nbsp;&nbsp; State: <strong style={{ color: '#111' }}>{currentAnchor}</strong>
+        &nbsp;&nbsp;|&nbsp;&nbsp; State: <strong style={{ color: '#111' }}>{pathname}</strong>
       </div>
     </div>
   );
