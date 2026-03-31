@@ -52,10 +52,10 @@ export function AnchorObserverDemo() {
   });
 
   return (
-    <div style={{ padding: 32, maxWidth: 800, margin: '0 auto' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 32px 64px' }}>
       <h2 style={{ fontSize: 22, marginBottom: 8 }}>useAnchorObserver</h2>
       <p style={{ color: '#6b7280', marginBottom: 24, fontSize: 14 }}>
-        Syncs scroll position with navigation. Click a nav item or scroll the content — the active section updates
+        Syncs scroll position with navigation. Click a nav item or scroll the page — the active section updates
         automatically.
       </p>
 
@@ -94,21 +94,38 @@ export function AnchorObserverDemo() {
               </button>
             );
           })}
+
+          <div
+            style={{
+              marginTop: 12,
+              padding: '8px 14px',
+              background: '#f9fafb',
+              borderRadius: 8,
+              fontSize: 11,
+              color: '#9ca3af',
+              lineHeight: 1.5,
+            }}
+          >
+            <div>anchor:</div>
+            <strong style={{ color: '#374151', wordBreak: 'break-all' }}>
+              {focusedAnchor?.replace('/anchor-observer', '') || '/'}
+            </strong>
+          </div>
         </nav>
 
-        <div
-          ref={ref}
-          style={{
-            flex: 1,
-            height: 420,
-            overflowY: 'auto',
-            borderRadius: 12,
-            border: '1px solid #e5e5e5',
-            background: '#fff',
-          }}
-        >
+        <div ref={ref} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
           {SECTIONS.map(section => (
-            <div key={section.id} style={{ minHeight: 240, padding: 32, borderBottom: '1px solid #f0f0f0' }}>
+            <div
+              key={section.id}
+              style={{
+                minHeight: '85vh',
+                padding: 32,
+                marginBottom: 2,
+                borderRadius: 12,
+                border: '1px solid #e5e5e5',
+                background: '#fff',
+              }}
+            >
               <div
                 style={{
                   display: 'inline-block',
@@ -125,20 +142,6 @@ export function AnchorObserverDemo() {
             </div>
           ))}
         </div>
-      </div>
-
-      <div
-        style={{
-          marginTop: 16,
-          padding: '10px 16px',
-          background: '#f9fafb',
-          borderRadius: 8,
-          fontSize: 13,
-          color: '#6b7280',
-        }}
-      >
-        Current anchor: <strong style={{ color: '#111' }}>{focusedAnchor ?? '—'}</strong>
-        &nbsp;&nbsp;|&nbsp;&nbsp; State: <strong style={{ color: '#111' }}>{pathname}</strong>
       </div>
     </div>
   );

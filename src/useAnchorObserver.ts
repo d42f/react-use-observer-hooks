@@ -2,29 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RefCallback } from 'react';
 import scrollIntoView from 'scroll-into-view-if-needed';
 
-import { smoothScrollBehavior } from './smoothScroll';
+import { getIntersectionRatio } from './utils/getIntersectionRatio';
+import { smoothScrollBehavior } from './utils/smoothScroll';
+import { throttle } from './utils/throttle';
 
 const THRESHOLD = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
-
-function getIntersectionRatio(element: Element, root?: Element): number {
-  const elementRect = element.getBoundingClientRect();
-  const rootRect = root
-    ? root.getBoundingClientRect()
-    : { top: 0, left: 0, bottom: window.innerHeight, right: window.innerWidth };
-
-  const intersectionTop = Math.max(elementRect.top, rootRect.top);
-  const intersectionLeft = Math.max(elementRect.left, rootRect.left);
-  const intersectionBottom = Math.min(elementRect.bottom, rootRect.bottom);
-  const intersectionRight = Math.min(elementRect.right, rootRect.right);
-
-  const intersectionWidth = Math.max(0, intersectionRight - intersectionLeft);
-  const intersectionHeight = Math.max(0, intersectionBottom - intersectionTop);
-  const intersectionArea = intersectionWidth * intersectionHeight;
-
-  const elementArea = elementRect.width * elementRect.height;
-
-  return elementArea === 0 ? 0 : intersectionArea / elementArea;
-}
 
 interface UseAnchorObserver<T> {
   ref: RefCallback<T>;
@@ -35,12 +17,16 @@ interface UseAnchorObserver<T> {
 interface UseAnchorObserverProps {
   anchors: string[];
   currentAnchor: string;
+  offsetPx?: number;
+  throttleMs?: number;
   onAnchorChange?: (anchor: string) => void;
 }
 
 export const useAnchorObserver = <T extends HTMLElement>({
   anchors,
   currentAnchor,
+  offsetPx = 0,
+  throttleMs = 50,
   onAnchorChange,
 }: UseAnchorObserverProps): UseAnchorObserver<T> => {
   const [container, setContainer] = useState<T | null>(null);
@@ -62,18 +48,16 @@ export const useAnchorObserver = <T extends HTMLElement>({
 
   useEffect(() => {
     if (!container || !window.IntersectionObserver) return;
-    const updateEntry = ([{ target }]: IntersectionObserverEntry[]) => {
-      setFocusedChild(prev =>
-        !prev || getIntersectionRatio(prev, container) < getIntersectionRatio(target, container) ? target : prev,
-      );
-    };
+    const updateEntry = throttle(([{ target }]: IntersectionObserverEntry[]) => {
+      setFocusedChild(prev => (!prev || getIntersectionRatio(prev) < getIntersectionRatio(target) ? target : prev));
+    }, throttleMs);
     const observers = Array.from(container.children).map(child => {
       const observer = new IntersectionObserver(updateEntry, { threshold: THRESHOLD });
       observer.observe(child);
       return observer;
     });
     return () => observers.forEach(o => o.disconnect());
-  }, [container]);
+  }, [container, throttleMs]);
 
   const focusedAnchor = useMemo(() => {
     if (!stateRef.current.isLocked) {

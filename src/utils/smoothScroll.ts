@@ -1,4 +1,3 @@
-// Memoize so we're much more friendly to non-dom envs
 let memoizedNow: () => number;
 
 const now = () => {
