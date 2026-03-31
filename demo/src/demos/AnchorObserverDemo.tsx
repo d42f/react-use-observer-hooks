@@ -44,6 +44,7 @@ export function AnchorObserverDemo() {
   const { pathname } = useLocation();
 
   const { ref, focusedAnchor } = useAnchorObserver<HTMLDivElement>({
+    offsetPx: 64,
     anchors: SECTIONS.map(s => s.id),
     currentAnchor: pathname,
     onAnchorChange: newAnchor => {

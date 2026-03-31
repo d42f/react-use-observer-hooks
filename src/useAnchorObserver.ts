@@ -52,12 +52,15 @@ export const useAnchorObserver = <T extends HTMLElement>({
       setFocusedChild(prev => (!prev || getIntersectionRatio(prev) < getIntersectionRatio(target) ? target : prev));
     }, throttleMs);
     const observers = Array.from(container.children).map(child => {
-      const observer = new IntersectionObserver(updateEntry, { threshold: THRESHOLD });
+      const observer = new IntersectionObserver(updateEntry, {
+        threshold: THRESHOLD,
+        rootMargin: `-${offsetPx}px 0px 0px 0px`,
+      });
       observer.observe(child);
       return observer;
     });
     return () => observers.forEach(o => o.disconnect());
-  }, [container, throttleMs]);
+  }, [container, throttleMs, offsetPx]);
 
   const focusedAnchor = useMemo(() => {
     if (!stateRef.current.isLocked) {
@@ -78,7 +81,8 @@ export const useAnchorObserver = <T extends HTMLElement>({
 
             stateRef.current.isLocked = true;
             await scrollIntoView(child, {
-              behavior: smoothScrollBehavior(),
+              behavior: actions =>
+                smoothScrollBehavior()(actions.map(a => ({ ...a, top: Math.max(0, a.top - offsetPx) }))),
               block: 'start',
               scrollMode: 'if-needed',
             });
@@ -87,7 +91,7 @@ export const useAnchorObserver = <T extends HTMLElement>({
         }
       }
     },
-    [container],
+    [container, offsetPx],
   );
 
   useEffect(() => {
@@ -112,10 +116,20 @@ export const useAnchorObserver = <T extends HTMLElement>({
       if (child) {
         stateRef.current.isInit = true;
         focusedAnchorRef.current = currentAnchor;
-        scrollIntoView(child, { behavior: 'instant', block: 'start', scrollMode: 'if-needed' });
+        scrollIntoView(child, {
+          behavior: actions => {
+            actions.forEach(({ el, left, top }) => {
+              el.scrollLeft = left;
+              el.scrollTop = Math.max(0, top - offsetPx);
+            });
+            return Promise.resolve([]);
+          },
+          block: 'start',
+          scrollMode: 'if-needed',
+        });
       }
     }
-  }, [currentAnchor, currentAnchorIndex, container]);
+  }, [currentAnchor, currentAnchorIndex, container, offsetPx]);
 
   return { ref, focusedAnchor: focusedAnchorRef.current, scrollToAnchor };
 };
