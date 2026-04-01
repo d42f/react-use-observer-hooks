@@ -20,7 +20,7 @@ npm install react-use-observer-hooks
 
 ## useAnchorObserver
 
-![react-use-observer-hooks-demo](https://github.com/user-attachments/assets/ebbcf070-51ba-4163-a7ce-1c1ceca45d82)
+![react-use-observer-hooks-demo-800](https://github.com/user-attachments/assets/eb567eaa-0e28-4248-97ca-ec6c8aa9ca32)
 
 
 **[Live Demo on StackBlitz](https://stackblitz.com/edit/vitejs-vite-rd7g5dua)**
